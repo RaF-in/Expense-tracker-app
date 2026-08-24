@@ -34,12 +34,12 @@ expense-tracker/
 │   │   ├── requirements.txt
 │   │   └── Dockerfile
 │   │
-│   └── ingestion-service/           # Java
+│   └── ingestion-service/           # .NET Core (C#)
 │       ├── src/
-│       │   └── main/java/
-│       ├── src/
-│       │   └── test/java/
-│       ├── pom.xml (or build.gradle)
+│       │   └── Program.cs
+│       ├── tests/
+│       │   └── EmailParserTests.cs
+│       ├── ingestion-service.csproj
 │       └── Dockerfile
 │
 ├── frontend/                        # React + Vite
@@ -93,7 +93,7 @@ expense-tracker/
 |-----------|--------------------------|
 | `services/core-api/` | Minimal .NET Core Web API. Single endpoint: `GET /` returns `{ "service": "core-api", "status": "running" }`. |
 | `services/receipt-service/` | Minimal Python HTTP server (Flask or FastAPI). `GET /` returns `{ "service": "receipt-service", "status": "running" }`. |
-| `services/ingestion-service/` | Minimal Java HTTP server (Spring Boot or Javalin). `GET /` returns `{ "service": "ingestion-service", "status": "running" }`. |
+| `services/ingestion-service/` | Minimal .NET Core HTTP server (ASP.NET Core Minimal API). `GET /` returns `{ "service": "ingestion-service", "status": "running" }`. |
 | `frontend/` | Vite + React. Default Vite welcome page. Builds and serves via nginx in Docker. |
 | `k8s/namespace.yaml` | Creates `expense-tracker` namespace. |
 | `k8s/postgres.yaml` | Postgres 16 StatefulSet with a PersistentVolumeClaim. No tables yet — just a running instance. |
@@ -330,9 +330,9 @@ Test 3: ParseRawOcrText
            This is a pure function — the cheapest possible test for the highest-risk logic.
 ```
 
-**Ingestion Service — JUnit 5 (1 test)**
+**Ingestion Service — xUnit (1 test)**
 
-File: `services/ingestion-service/src/test/java/.../EmailParserTest.java`
+File: `services/ingestion-service/tests/EmailParserTests.cs`
 
 ```
 Test 4: ParseAmazonOrderEmail
@@ -429,7 +429,7 @@ jobs:
     # Duration: ~5s
 
   test-ingestion-service:
-    # Checkout → Setup Java → Run JUnit 5
+    # Checkout → Setup .NET → Run xUnit tests
     # Pure function test — no containers needed
     # Duration: ~10s
 

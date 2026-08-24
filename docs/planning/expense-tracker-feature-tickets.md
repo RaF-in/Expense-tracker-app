@@ -603,7 +603,7 @@ Frontend:
 
 **Implementation logic:**
 
-Ingestion Service (Java):
+Ingestion Service (.NET Core):
 - On startup, connects to the app's email inbox via IMAP (e.g., intake@yourapp.com on a configured mail server).
 - Polls every 60 seconds for new emails.
 - For each new email:
@@ -629,7 +629,7 @@ Core API additions:
 6. Each user gets a unique intake address.
 
 **Tests to add:**
-- Ingestion Service (JUnit 5): Existing Test 4 (ParseAmazonOrderEmail) already covers parsing. Add a second parser test for bank alert format.
+- Ingestion Service (xUnit): Existing Test 4 (ParseAmazonOrderEmail) already covers parsing. Add a second parser test for bank alert format.
 
 ---
 
@@ -822,6 +822,6 @@ Foundation Tasks 00-05 (complete)
 | F07 | Extend existing Vitest component test | Frontend |
 | F11 | 1 new Playwright E2E test | E2E (edit flow) |
 | F12 | 1 integration test (RabbitMQ publish/consume) | Integration |
-| F15 | 1 JUnit test (bank alert parser) | Unit |
+| F15 | 1 xUnit test (bank alert parser) | Unit |
 
 **Total test count after all features:** 7 (foundation) + 6 (features) = **13 tests**.

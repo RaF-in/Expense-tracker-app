@@ -66,7 +66,7 @@ If any tripwire fires, migrate to self-hosted Keycloak on the existing Hetzner V
 ## ADR-003: Backend Architecture & API Design
 
 **Context**
-The app has distinct backend responsibilities: transaction CRUD, dashboard aggregation, receipt AI processing, and email ingestion. These have different scaling characteristics, deployment cadences, and runtime requirements. The project uses this as a learning vehicle for distributed systems and polyglot microservices.
+The app has distinct backend responsibilities: transaction CRUD, dashboard aggregation, receipt AI processing, and email ingestion. These have different scaling characteristics, deployment cadences, and runtime requirements. The project uses this as a learning vehicle for distributed systems and microservices.
 
 **Options Considered**
 1. **Monolith** — All logic in one deployable. Simple, but no distributed systems learning, and AI processing would block HTTP request threads.
@@ -75,13 +75,13 @@ The app has distinct backend responsibilities: transaction CRUD, dashboard aggre
 4. **Microservices (5+ services)** — Over-decomposed. Dashboard as a separate read service, email and SMS as separate services, etc. Engineering for problems that don't exist.
 
 **Decision**
-Three microservices with a polyglot stack:
+Three microservices (two runtimes — .NET Core and Python):
 
 | Service | Language | Responsibility |
 |---------|----------|---------------|
 | **Core API** | .NET Core (C#) | Transaction CRUD, dashboard aggregation queries, user preferences. Owns the Postgres database. |
 | **Receipt Processing Service** | Python | Receives receipt images, runs OCR/AI extraction, returns structured data (merchant, amount, date, category, confidence). |
-| **Ingestion Service** | Java | Monitors email inbox for forwarded transaction emails, parses content, creates transactions via Core API. |
+| **Ingestion Service** | .NET Core (C#) | Monitors email inbox for forwarded transaction emails, parses content, creates transactions via Core API. |
 
 Frontend-to-Core API communication via **REST**. API surface maps directly to UI screens:
 
@@ -100,14 +100,14 @@ GET    /api/receipts/{id}/status
 Frontend: **React** (Vite SPA).
 
 **Trade-offs**
-- *Gained:* Real distributed systems learning, polyglot experience (.NET, Python, Java), independent deployment of services, AI processing isolated from request threads.
+- *Gained:* Real distributed systems learning, experience across two runtimes (.NET, Python), independent deployment of services, AI processing isolated from request threads.
 - *Given up:* Simplicity of a monolith, single-language debugging, shared code via imports (must use HTTP/messaging instead).
-- *Accepted risk:* Three different runtimes means three dependency management systems (NuGet, pip, Maven/Gradle), three Dockerfiles, and context-switching cost when debugging across services.
+- *Accepted risk:* Two runtimes means two dependency management systems (NuGet, pip), separate Dockerfiles, and some context-switching cost when debugging across services.
 
 **Tripwire — Reopen This Decision If:**
 - Operational overhead of 3 services exceeds development velocity (spending more time on infra than features).
 - Any service boundary proves artificial (two services always change together for every feature).
-- If the team grows, re-evaluate whether the polyglot approach helps or hinders onboarding.
+- If the team grows, re-evaluate whether the mixed-runtime approach helps or hinders onboarding.
 
 ---
 
@@ -218,7 +218,7 @@ Auto-forwarding rule approach. Each user receives a unique intake email address 
 Processing flow:
 ```
 User's Gmail → auto-forward rule → jd-a1b2@intake.yourapp.com
-  → Java Ingestion Service polls inbox via IMAP (every 60 seconds)
+  → .NET Core Ingestion Service polls inbox via IMAP (every 60 seconds)
   → Identifies user by unique intake address
   → Parses email body (regex for known formats + LLM fallback for unknown)
   → POST /api/transactions on Core API
@@ -289,7 +289,7 @@ The frontend is a single-page application that communicates with the .NET Core A
 ## ADR-008: Deployment & DevOps Strategy
 
 **Context**
-The system consists of 4 deployable units (React SPA, .NET Core API, Python Receipt Service, Java Ingestion Service) plus 3 external managed services (Auth0, Supabase Postgres, CloudAMQP RabbitMQ). The developer wants to learn Kubernetes. Budget allows ~€5-10/month for infrastructure.
+The system consists of 4 deployable units (React SPA, .NET Core API, Python Receipt Service, .NET Core Ingestion Service) plus 3 external managed services (Auth0, Supabase Postgres, CloudAMQP RabbitMQ). The developer wants to learn Kubernetes. Budget allows ~€5-10/month for infrastructure.
 
 **Options Considered**
 1. **Free tier platforms (Railway, Render, Vercel)** — Zero cost, but no Kubernetes learning, cold-start issues, platform-specific constraints.
@@ -304,7 +304,7 @@ The system consists of 4 deployable units (React SPA, .NET Core API, Python Rece
 | React SPA | Vercel free tier (static files, global CDN) |
 | .NET Core API | k3s on Hetzner CX22 (~€4.50/month) |
 | Python Receipt Service | k3s on same Hetzner node |
-| Java Ingestion Service | k3s on same Hetzner node |
+| .NET Core Ingestion Service | k3s on same Hetzner node |
 | Postgres | Supabase free tier (managed) |
 | RabbitMQ | CloudAMQP free tier (managed) |
 | Auth | Auth0 free tier (managed) |
@@ -342,7 +342,7 @@ If load tripwire fires, add a second Hetzner node and join it to the k3s cluster
 |-----|----------|-------------|
 | 001 — Storage | Postgres + JSONB + events table, on-the-fly aggregation | Dashboard query > 200ms p95 |
 | 002 — Auth | Auth0 free tier (centralized IdP for multi-app SSO) | MAU > 7,500 or second app in active dev |
-| 003 — Backend | 3 microservices (.NET Core + Python + Java), REST API | Operational overhead exceeds dev velocity |
+| 003 — Backend | 3 microservices (.NET Core ×2 + Python), REST API | Operational overhead exceeds dev velocity |
 | 004 — Real-time | SSE for frontend push, RabbitMQ for inter-service async | Message volume > 500K/month |
 | 005 — Receipt | Tesseract + LLM, no image storage | OCR accuracy < 85% |
 | 006 — Email | Auto-forwarding rules, IMAP polling every 60s | Adoption < 20% due to setup friction |
