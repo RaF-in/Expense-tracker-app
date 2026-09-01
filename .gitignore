@@ -1,0 +1,28 @@
+# git worktrees
+.worktrees/
+
+# .NET
+bin/
+obj/
+*.user
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Node / React / Vite
+node_modules/
+dist/
+.vite/
+
+# Environment & secrets
+.env
+.env.local
+appsettings.Development.json
+
+# Editors / OS
+.vs/
+.idea/
+.DS_Store
