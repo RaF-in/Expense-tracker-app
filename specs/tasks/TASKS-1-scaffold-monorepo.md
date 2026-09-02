@@ -77,7 +77,7 @@ Creates `core-api` and `ingestion-service` as ASP.NET Core Minimal APIs that eac
 
 ## Task T2: Scaffold the receipt-service FastAPI service
 
-> **Status:** not started
+> **Status:** done
 > **Verification:** checklist
 > **Effort:** s
 > **Priority:** critical
