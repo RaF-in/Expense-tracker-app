@@ -21,6 +21,7 @@ dist/
 .env
 .env.local
 appsettings.Development.json
+k8s/secrets.yaml
 
 # Editors / OS
 .vs/
