@@ -193,7 +193,7 @@ None. There is no conditional rendering, no handler, and no state in this page â
 
 ## Task T4: Deploy the infrastructure manifests and gitignore the real secrets file
 
-> **Status:** not started
+> **Status:** done
 > **Verification:** checklist
 > **Effort:** m
 > **Priority:** critical

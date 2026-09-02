@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: expense-tracker
+  labels:
+    app.kubernetes.io/part-of: expense-tracker
+    app.kubernetes.io/name: expense-tracker
+    app.kubernetes.io/component: namespace
