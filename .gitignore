@@ -28,3 +28,5 @@ k8s/secrets.yaml
 .vs/
 .idea/
 .DS_Store
+
+*/explanations/
