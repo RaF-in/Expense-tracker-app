@@ -131,7 +131,7 @@ Creates `receipt-service` as a FastAPI application answering `GET /` with its st
 
 ## Task T3: Scaffold the frontend as a built SPA served by nginx
 
-> **Status:** not started
+> **Status:** done
 > **Verification:** ui
 > **Effort:** m
 > **Priority:** critical
