@@ -376,7 +376,7 @@ Builds the operator surface: `build`, `deploy`, `status`, `logs svc=<name>`, and
 
 ## Task T7: README — prerequisites, first-run setup, and a verified clone-to-running path
 
-> **Status:** not started
+> **Status:** done
 > **Verification:** checklist
 > **Effort:** m
 > **Priority:** high
