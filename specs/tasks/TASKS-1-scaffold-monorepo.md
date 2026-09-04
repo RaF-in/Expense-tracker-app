@@ -317,7 +317,7 @@ Gives each of the four application images a Deployment and a ClusterIP Service i
 
 ## Task T6: The Makefile — five targets and two fail-fast guards
 
-> **Status:** not started
+> **Status:** done
 > **Verification:** checklist
 > **Effort:** l
 > **Priority:** critical
