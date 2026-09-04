@@ -257,7 +257,7 @@ Creates the `expense-tracker` namespace, the credentials Secret pattern, and the
 
 ## Task T5: Deployment and ClusterIP Service manifests for the four application workloads
 
-> **Status:** not started
+> **Status:** done
 > **Verification:** checklist
 > **Effort:** m
 > **Priority:** critical
