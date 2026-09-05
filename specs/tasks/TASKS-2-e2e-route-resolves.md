@@ -107,7 +107,7 @@ Adds a standard Kubernetes `Ingress` routing `/api/*` to `core-api` and `/*` to 
 
 ## Task T3: Frontend app shell + routing
 
-> **Status:** not started
+> **Status:** done
 > **Verification:** ui
 > **Effort:** m
 > **Priority:** high

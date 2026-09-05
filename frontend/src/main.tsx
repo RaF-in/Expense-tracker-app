@@ -1,17 +1,13 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-
-function App() {
-  return (
-    <main>
-      <h1>Expense Tracker</h1>
-      <p>Application is running.</p>
-    </main>
-  );
-}
+import { BrowserRouter } from "react-router-dom";
+import { App } from "./App";
+import "./styles/theme.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <App />
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
   </StrictMode>,
 );
