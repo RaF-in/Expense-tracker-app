@@ -1,6 +1,9 @@
 # git worktrees
 .worktrees/
 
+# wiki working clone (archive-issue skill)
+.wiki/
+
 # .NET
 bin/
 obj/
