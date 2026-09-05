@@ -29,6 +29,23 @@ Then edit `k8s/secrets.yaml` and replace the placeholder `changeme` values for `
 `POSTGRES_PASSWORD`, `RABBITMQ_DEFAULT_USER`, and `RABBITMQ_DEFAULT_PASS` with values of your
 choosing. Leave `POSTGRES_DB` as `expense_tracker` — it's a database name, not a credential.
 
+The cluster also needs an ingress controller to route browser traffic at `http://localhost` to
+the frontend and core-api Services. This is a one-time, manual install of `ingress-nginx` — it's
+cluster infrastructure, not an application image, so it isn't part of `make deploy`:
+
+```
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.11.3/deploy/static/provider/cloud/deploy.yaml
+```
+
+Wait for the controller pod to be ready before deploying:
+
+```
+kubectl wait --namespace ingress-nginx \
+  --for=condition=ready pod \
+  --selector=app.kubernetes.io/component=controller \
+  --timeout=120s
+```
+
 ## Build, deploy, verify
 
 ```
@@ -42,9 +59,24 @@ if any application image is missing (run `make build` first) or if `k8s/secrets.
 exist yet (see First-run setup above). It's also idempotent: running it again after a successful
 deploy is safe and leaves the same pods running.
 
+### Verify via the Ingress
+
+With the `ingress-nginx` controller installed (see First-run setup above) and `make deploy` run,
+the frontend and core-api are reachable through one origin, `http://localhost`, with no
+port-forwarding required:
+
+```
+curl http://localhost/api/health
+# {"status":"ok","timestamp":"...","version":"0.1.0"}
+```
+
+Open `http://localhost` in a browser — the Dashboard page should show "Connected to API ✓", and
+the Expenses/Settings nav links should work without a full page reload.
+
 ### Verify each service
 
-Port-forward each Service on its Service port and check it answers:
+Port-forwarding each Service directly (bypassing the Ingress) still works and remains useful for
+debugging one service in isolation:
 
 ```
 kubectl port-forward svc/core-api 8080:80 -n expense-tracker &

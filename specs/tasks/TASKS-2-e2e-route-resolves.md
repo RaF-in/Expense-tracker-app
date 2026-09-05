@@ -53,7 +53,7 @@ Adds a liveness/connectivity probe (`GET /api/health`) to core-api and a CORS al
 
 ## Task T2: Ingress routing + first-run docs
 
-> **Status:** not started
+> **Status:** done
 > **Verification:** checklist
 > **Effort:** s
 > **Priority:** high
