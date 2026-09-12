@@ -13,14 +13,29 @@ build:
 			{ echo "Build failed for $$svc"; exit 1; }; \
 	done
 
+# Keys k8s/secrets.yaml must define before anything is applied. The guard makes a
+# stale secrets file (e.g. one written before Auth0 landed) fail at deploy time,
+# naming the missing keys, instead of crash-looping pods later.
+REQUIRED_SECRET_KEYS := POSTGRES_USER POSTGRES_PASSWORD POSTGRES_DB \
+	RABBITMQ_DEFAULT_USER RABBITMQ_DEFAULT_PASS \
+	AUTH0_DOMAIN AUTH0_CLIENT_ID AUTH0_AUDIENCE
+
 deploy:
+	@[ -f k8s/secrets.yaml ] || \
+		{ echo "k8s/secrets.yaml not found — copy k8s/secrets.yaml.template to k8s/secrets.yaml and fill in the values."; exit 1; }
+	@missing=""; for key in $(REQUIRED_SECRET_KEYS); do \
+		grep -q "^  $$key:" k8s/secrets.yaml || missing="$$missing $$key"; \
+	done; \
+	if [ -n "$$missing" ]; then \
+		echo "k8s/secrets.yaml is missing required key(s):$$missing"; \
+		echo "Copy k8s/secrets.yaml.template and fill in every value — docs/auth0-setup-runbook.md covers the AUTH0_* keys."; \
+		exit 1; \
+	fi
 	@for entry in $(SERVICE_DIRS); do \
 		svc=$${entry%%:*}; \
 		docker image inspect expense-tracker/$$svc:local >/dev/null 2>&1 || \
 			{ echo "Missing image expense-tracker/$$svc:local — run 'make build' first."; exit 1; }; \
 	done
-	@[ -f k8s/secrets.yaml ] || \
-		{ echo "k8s/secrets.yaml not found — copy k8s/secrets.yaml.template to k8s/secrets.yaml and fill in the values."; exit 1; }
 	kubectl apply -f k8s/namespace.yaml -f k8s/secrets.yaml
 	kubectl apply -f k8s/
 
