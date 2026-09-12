@@ -23,7 +23,7 @@ tested until the Application in step 2 exists.
 |---|-------|----------|
 | 1 | **API** (a resource server) | `AUTH0_AUDIENCE` |
 | 2 | **Application** (SPA type) | `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID` |
-| 3 | **Connections** — database, Google, GitHub | sign-in methods |
+| 3 | **Connections** — database, Google (GitHub optional — dropped from issue #3 scope) | sign-in methods |
 | 4 | **Test user** | credentials for Task 05 |
 | 5 | **Post-Login Action** | `email` + `name` claims in the access token |
 
@@ -217,7 +217,11 @@ name rather than yours on the consent screen.
 > **Before any real deployment:** replace these with project-owned OAuth credentials from the
 > Google Cloud Console. This is a known prerequisite, not a surprise. Deferred here deliberately.
 
-### 3c. GitHub
+### 3c. GitHub — OPTIONAL (dropped from issue #3 scope)
+
+> **Dropped from scope on 2026-09-12 (developer decision):** the project ships with database and
+> Google connections only. Keep this section if you want GitHub later — it requires no code
+> change, only the steps below plus enabling the connection on the SPA application.
 
 GitHub does **not** offer Auth0 development keys, so this one needs a real OAuth App. Two parts.
 

@@ -22,7 +22,7 @@ literal reading.
 
 ## Task T1: Auth0 tenant setup, Secret keys, and deploy guard
 
-> **Status:** in progress — repo-side checks (template, git history, deploy guard ×3, tenant discovery/JWKS) verified 2026-09-12; Auth0 console checklist items pending developer confirmation
+> **Status:** done — repo-side checks (template, git history, deploy guard ×3, tenant discovery/JWKS) verified 2026-09-12; developer confirmed runbook steps 0–6 executed with two connections (database + Google; GitHub dropped from scope — see the REQ Decisions Log amendment). The access-token claim decode is re-verified by T5's in-app token-decode check.
 > **Verification:** checklist
 > **Effort:** m
 > **Priority:** critical
@@ -34,7 +34,7 @@ literal reading.
 ### Description
 
 Creates the external identity infrastructure every other task consumes: an Auth0 tenant with a
-registered API, an SPA application, three connections, a test user, and a Post-Login Action that
+registered API, an SPA application, two connections (amended 2026-09-12 — GitHub dropped), a test user, and a Post-Login Action that
 puts profile claims on the access token. Nothing here is code — it is console state made
 reproducible by a runbook, plus the two repo-side changes that stop a missing tenant value from
 failing silently later. The runbook (`docs/auth0-setup-runbook.md`) is already written; this task
@@ -56,8 +56,8 @@ executes it end to end and proves it is followable.
   Web Origins; Refresh Token Rotation is ON with reuse interval `0`; grant types are Authorization
   Code + Refresh Token _(verifies R15 / AC-2 — a missing Web Origin breaks refresh, not login, so
   it fails later and elsewhere)_
-- **Confirm three connections are enabled** — expected: Database, Google (Auth0 dev keys), and
-  GitHub (own OAuth App) all present and each able to complete a sign-in _(REQ scope)_
+- **Confirm two connections are enabled** — expected: Database and Google (Auth0 dev keys)
+  present and each able to complete a sign-in _(REQ scope, amended 2026-09-12 — GitHub dropped)_
 - **Decode a freshly issued access token at jwt.io** — expected: claims
   `https://expense-tracker.local/email` and `https://expense-tracker.local/name` are present on the
   **access token**, not only on the ID token _(verifies R12 / AC-16 prerequisite, ARCH A13 — the
@@ -109,7 +109,7 @@ executes it end to end and proves it is followable.
 - Do NOT automate tenant setup via the Auth0 Management API or Terraform (ARCH A16 — disproportionate for one tenant).
 - Do NOT create project-owned Google OAuth credentials (ARCH Out of Scope — dev keys suffice for localhost; the runbook flags the swap as a deployment prerequisite).
 - Do NOT configure roles, scopes, or permissions on the API (ARCH Out of Scope — authentication only, REQ decision 10).
-- Do NOT set up account linking across connections (ARCH Out of Scope — deferred to issue #4; duplicate accounts across Google/GitHub/password are **expected behavior** in this task, not a defect).
+- Do NOT set up account linking across connections (ARCH Out of Scope — deferred to issue #4; duplicate accounts across Google/password are **expected behavior** in this task, not a defect).
 - Do NOT customize Universal Login branding, MFA, password reset, or signup (ARCH Out of Scope — Auth0 defaults suffice).
 - Do NOT enable email verification gating (REQ decision 11).
 - Do NOT add Playwright storage state or Resource Owner Password Grant configuration (ARCH Out of Scope — issue #6; creating the test user is where this task stops).
@@ -507,10 +507,10 @@ compiling state.
 - **Complete login from `http://localhost` (ingress)** — expected: success _(verifies R15 / AC-2)_
 - **Complete login from `http://localhost:5173` (Vite dev)** — expected: success _(verifies R15 /
   AC-2 — exercises the CORS-preflight ordering pinned by T2's A20 check from the browser side)_
-- **Sign in with each of the three connections** — database, Google, GitHub — expected: all three
-  reach the app _(REQ scope; note that the same person via three connections yields three distinct
-  `sub` values and therefore three accounts — **expected behavior in this task**, resolved in issue
-  #4)_
+- **Sign in with each of the two connections** — database, Google — expected: both reach the
+  app _(REQ scope as amended 2026-09-12; the same person via both connections yields two
+  distinct `sub` values and therefore two accounts — **expected behavior in this task**,
+  resolved in issue #4)_
 - **Sign up with email/password and do not verify the address** — expected: reaches `/dashboard`
   _(verifies R16 / AC-4)_
 
@@ -665,13 +665,14 @@ succeeds, with no retry.
 
 - **Sign in as a user with a `name` claim** — expected: the avatar shows initials derived from
   `name` _(verifies R5 / AC-9)_
-- **Sign in as a user with no `name` but with an `email`** (common with GitHub) — expected: the
+- **Sign in as a user with no `name` but with an `email`** (possible with a nameless social
+  profile) — expected: the
   avatar shows initials from the **email local-part** _(verifies R5 / AC-9 and the REQ edge case
   "user has no `name` claim")_
 - **Sign in as a user with neither `name` nor `email`** — expected: a **generic person icon** —
   `getInitials()` returns `null`, never `""`; the avatar is **never blank** _(verifies R5 / AC-9
   and the REQ edge case "user has neither `name` nor `email`" — a blank circle reads as broken UI)_
-- **Repeat across all three connections** — database, Google, GitHub — expected: a correct,
+- **Repeat across both connections** — database, Google — expected: a correct,
   non-blank avatar in every case _(ARCH backward-regression mitigation for `NavBar.tsx`)_
 
 ##### Logout
