@@ -22,14 +22,19 @@ declare global {
 
 const requiredKeys: (keyof AppConfig)[] = ["domain", "clientId", "audience"];
 
-const missing = requiredKeys.filter(
-  (key) =>
-    !window.__APP_CONFIG__ ||
-    typeof window.__APP_CONFIG__[key] !== "string" ||
-    window.__APP_CONFIG__[key]!.trim() === ""
-);
+function isBlank(value: string | undefined): boolean {
+  return typeof value !== "string" || value.trim() === "";
+}
 
-if (missing.length > 0) {
+function isValidConfig(
+  candidate: Partial<AppConfig> | undefined
+): candidate is AppConfig {
+  return !!candidate && requiredKeys.every((key) => !isBlank(candidate[key]));
+}
+
+const missing = requiredKeys.filter((key) => isBlank(window.__APP_CONFIG__?.[key]));
+
+if (!isValidConfig(window.__APP_CONFIG__)) {
   // A blank value would otherwise fail much later, at Auth0, as an opaque
   // "invalid token" error. Fail here instead — as a plain message on the page,
   // never a white screen (main.tsx never runs when this module throws).
@@ -40,7 +45,7 @@ if (missing.length > 0) {
   );
 }
 
-export const config: AppConfig = window.__APP_CONFIG__ as AppConfig;
+export const config: AppConfig = window.__APP_CONFIG__;
 
 function showConfigurationError(missingKeys: string[]): void {
   const heading = document.createElement("h1");

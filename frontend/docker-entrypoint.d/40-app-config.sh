@@ -24,6 +24,20 @@ if [ -n "$missing" ]; then
     exit 1
 fi
 
+# The values below are interpolated into a double-quoted JS string literal in
+# config.js.template with no further escaping. A stray " or \ would break out
+# of that literal and inject arbitrary JS into every browser that loads the
+# app, so reject any value that could do that before envsubst ever runs.
+unsafe=""
+case "$AUTH0_DOMAIN"    in *'"'*|*'\'*) unsafe="$unsafe AUTH0_DOMAIN" ;; esac
+case "$AUTH0_CLIENT_ID" in *'"'*|*'\'*) unsafe="$unsafe AUTH0_CLIENT_ID" ;; esac
+case "$AUTH0_AUDIENCE"  in *'"'*|*'\'*) unsafe="$unsafe AUTH0_AUDIENCE" ;; esac
+
+if [ -n "$unsafe" ]; then
+    echo "40-app-config.sh: unsafe character (\" or \\) in:$unsafe" >&2
+    exit 1
+fi
+
 # Substitute only the three named variables, leaving any other $… untouched.
 envsubst '${AUTH0_DOMAIN} ${AUTH0_CLIENT_ID} ${AUTH0_AUDIENCE}' \
     < "$template" > "$output"

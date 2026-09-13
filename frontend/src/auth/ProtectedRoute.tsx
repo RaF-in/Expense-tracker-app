@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
@@ -15,6 +15,7 @@ import { useAuth0 } from "@auth0/auth0-react";
 export function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isLoading, error, isAuthenticated, loginWithRedirect } = useAuth0();
   const location = useLocation();
+  const [redirectFailed, setRedirectFailed] = useState(false);
 
   useEffect(() => {
     if (isLoading || error || isAuthenticated) return;
@@ -23,9 +24,17 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
     loginWithRedirect({
       appState: { returnTo: location.pathname },
     }).catch((redirectError) => {
+      // If Auth0 itself can't be reached to start the redirect, don't leave
+      // the visitor on a blank page forever — route them to the same
+      // recoverable error screen a failed/cancelled login uses.
       console.error("Login redirect could not be started", redirectError);
+      setRedirectFailed(true);
     });
   }, [isLoading, error, isAuthenticated, loginWithRedirect, location.pathname]);
+
+  if (redirectFailed) {
+    return <Navigate to="/login-error" replace />;
+  }
 
   if (error) {
     // Raw Auth0 error text goes to the console for developers and is NEVER

@@ -25,8 +25,10 @@ export function useApi(): (path: string, init?: RequestInit) => Promise<Response
         // failure redirects — HTTP 4xx/5xx responses are returned to the
         // caller unmodified, never retried, never redirected.
         console.error("Token acquisition failed; restarting login", error);
-        void loginWithRedirect({
+        loginWithRedirect({
           appState: { returnTo: window.location.pathname },
+        }).catch((redirectError) => {
+          console.error("Login redirect could not be started", redirectError);
         });
         // The page is navigating to Auth0; this promise intentionally never
         // settles so no caller renders an error state mid-redirect.
