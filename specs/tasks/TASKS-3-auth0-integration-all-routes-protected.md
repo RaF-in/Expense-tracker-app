@@ -442,7 +442,7 @@ This is the first runtime-config mechanism in the repo; issue #4 will reuse the 
 
 ## Task T4: Auth provider, route gate, and login-error screen
 
-> **Status:** not started
+> **Status:** done (code) — verified 2026-09-13: `npm run build` clean (`tsc -b` + vite, 44 modules), which is the checklist's Layout-signature regression guard; `@auth0/auth0-react` 2.24.1 installed as the only new dependency; provider order `BrowserRouter → AuthProvider → App` pinned by A17; redirect lives in a `useEffect`; `/login-error` is the sole public route; raw Auth0 errors `console.error`'d only, never rendered; no token value logged anywhere in the diff. **Deferred to the developer (no browser in this environment):** all browser-observable items — logged-out redirects to Auth0 per route, deep-link return to `/expenses`, slow-3G full-page loader with no NavBar, reload-stays-signed-in, consent-cancel → `/login-error` with working "Try again", both entry points (`:80`/`:5173`), both connections, unverified-email signup, and the StrictMode single-redirect count.
 > **Verification:** ui
 > **Effort:** l
 > **Priority:** critical
