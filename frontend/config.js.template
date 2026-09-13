@@ -1,0 +1,19 @@
+// Auth0 runtime configuration for the SPA. Two paths produce the config.js the
+// browser loads, mirroring the k8s/secrets.yaml.template -> k8s/secrets.yaml
+// pattern:
+//
+//  * cluster: docker-entrypoint.d/40-app-config.sh runs envsubst over this
+//    template at container start, filling ${AUTH0_*} from the pod environment
+//    (secretKeyRef from k8s/secrets.yaml). A Secret change needs a pod
+//    restart, never an image rebuild.
+//  * Vite dev: copy this file to frontend/public/config.js (gitignored) and
+//    replace the three ${AUTH0_*} placeholders with real tenant values.
+//
+// Values come from the Auth0 tenant — domain and clientId from the SPA
+// application, audience from the API identifier. They are public by design and
+// kept out of git only so environment-specific values stay out of history.
+window.__APP_CONFIG__ = {
+  domain: "${AUTH0_DOMAIN}",
+  clientId: "${AUTH0_CLIENT_ID}",
+  audience: "${AUTH0_AUDIENCE}",
+};

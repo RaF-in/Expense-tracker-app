@@ -3,3 +3,7 @@ dist
 .vite
 .git
 *.tsbuildinfo
+# Dev tenant values must never be baked into an image layer: COPY . . would
+# otherwise carry public/config.js into dist/. The entrypoint renders
+# config.js at container start, so the runtime overwrite would hide the leak.
+public/config.js

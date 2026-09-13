@@ -4,6 +4,9 @@
 # wiki working clone (archive-issue skill)
 .wiki/
 
+# render-spec output (derived from specs/*.md)
+specs/rendered/
+
 # .NET
 bin/
 obj/
@@ -26,10 +29,11 @@ dist/
 .env.local
 appsettings.Development.json
 k8s/secrets.yaml
+frontend/public/config.js
 
 # Editors / OS
 .vs/
 .idea/
 .DS_Store
 
-*/explanations/
+*/raw/

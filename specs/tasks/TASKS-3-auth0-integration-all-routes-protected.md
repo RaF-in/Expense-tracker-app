@@ -134,7 +134,7 @@ executes it end to end and proves it is followable.
 
 ## Task T2: Core API token validation and `GET /api/me`
 
-> **Status:** not started
+> **Status:** done (code) — verified 2026-09-12: build clean; exactly two `.AllowAnonymous()` hits (`/`, `/api/health`); both public endpoints 200 with unchanged shapes against the deployed pod; `/api/me` 401 with no token / malformed / truncated / self-signed-wrong-`iss` (distinguishable Warning lines per rejection, zero token fragments in logs); CORS preflight `OPTIONS` from `http://localhost:5173` → 204 (A20); startup failure cases (Domain missing/malformed, Audience missing, tenant unreachable → eager JWKS `IDX20803`) each exit before listening naming the setting, incl. an in-cluster one-off pod; `kubectl describe` shows exactly the two `secretKeyRef` env entries. **Deferred to the developer (need a browser-issued Auth0 token):** valid-token `/api/me` 200 with non-null `sub`/`email`/`name`, expired-token 401, wrong-`aud` 401, other-tenant 401, N5 machine-shaped token, and live-token-across-pod-restart. **Note:** ingress-nginx is not installed in the cluster right now, so the ingress-path curls were run through a `svc/core-api` port-forward (ingress manifest untouched by this task); `:8080` in the README is the port-forward convention.
 > **Verification:** checklist
 > **Effort:** l
 > **Priority:** critical
@@ -305,7 +305,7 @@ browser is a UX affordance; this task is the part an attacker cannot bypass.
 
 ## Task T3: SPA runtime configuration delivery
 
-> **Status:** not started
+> **Status:** done — verified 2026-09-12: `npm run build` clean with `config.js` script strictly before the module bundle in `dist/index.html` (moved into `<head>`; Vite hoists the module tag, body placement left it second in document order); container render exact (`docker run` + `curl /config.js` returns the three passed values); all four failure cases (each var unset ×3, blank `AUTH0_AUDIENCE`) exit non-zero naming the variable; image hygiene clean (`config.js` absent from `/usr/share/nginx/html` pre-entrypoint); `git check-ignore` confirms `frontend/public/config.js` ignored; `Cache-Control: no-store` present; deep links `/expenses` and `/settings` still serve `index.html`; blank `clientId` → throw + "Configuration error" page naming the key (verified against the compiled `config.ts` with a DOM shim — no headless browser in this environment); Secret-change → rollout-restart (frontend only, no image rebuild) → `config.js` served the new domain, real Secret restored immediately after; `kubectl exec env` shows exactly the three `AUTH0_*` secretKeyRef keys (remaining `POSTGRES_*`/`RABBITMQ_*` entries are kube-injected Service-link plumbing, no credentials); `npm run dev` on `:5173` serves the same config mechanism with `public/config.js` copied from the template — zero `VITE_*` involvement. **Note:** `frontend/public/config.js` was created locally (gitignored) with the real tenant values for upcoming T4/T5 dev work.
 > **Verification:** checklist
 > **Effort:** l
 > **Priority:** critical

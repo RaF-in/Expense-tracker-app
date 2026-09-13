@@ -40,6 +40,19 @@ spec:
         - name: core-api
           image: expense-tracker/core-api:local
           imagePullPolicy: IfNotPresent
+          # Explicit per-key secretKeyRef, never envFrom: envFrom would inject
+          # every Secret key (including POSTGRES_PASSWORD) into this pod.
+          env:
+            - name: Auth0__Domain
+              valueFrom:
+                secretKeyRef:
+                  name: expense-tracker-secrets
+                  key: AUTH0_DOMAIN
+            - name: Auth0__Audience
+              valueFrom:
+                secretKeyRef:
+                  name: expense-tracker-secrets
+                  key: AUTH0_AUDIENCE
           ports:
             - containerPort: 8080
           resources:
