@@ -609,7 +609,7 @@ component tests, recorded for #6: `ProtectedRoute`'s three-state render branchin
 
 ## Task T5: Authenticated fetch, identity chrome, and logout
 
-> **Status:** not started
+> **Status:** done (code) — verified 2026-09-13: `npm run build` clean (45 modules); `grep -rn getAccessTokenSilently src/` hits only `useApi.ts` (no `pages/` caller); `getInitials()` exercised against 11 edge cases via an esbuild-compiled run (name / email local-part / both-blank / undefined / whitespace-only / `@`-only → null; single word → 1 letter; separators `.` `_` `-` `+`; never `""`); `Dashboard.tsx` diff confirmed comment-only (8 comment lines, zero logic lines); no token value logged anywhere in the diff (the one `console.error` in `useApi` logs the refresh-failure error object, never a token). **Deferred to the developer (no browser in this environment):** network-tab items (`Authorization: Bearer` present, `aud` decode, `/api/health` carries no auth header), 60-second-token-lifetime proactive-refresh check + restore to `86400`, refresh-token revocation → login, two-tab concurrent refresh, avatar by connection type, logout → Auth0 presents a fresh login prompt, and 4xx/5xx pass-through observation.
 > **Verification:** ui
 > **Effort:** m
 > **Priority:** high

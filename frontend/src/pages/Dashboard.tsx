@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
 
+// NOTE: this health check is deliberately UNAUTHENTICATED and stays outside
+// useApi() (ARCH A3) — routing it through auth would make a dead API and an
+// auth failure produce the same on-screen symptom, destroying the diagnostic
+// value of the app's only diagnostic. Also, since T4's route gate, this
+// component mounts only AFTER login: a call that used to fire on page load
+// now fires post-authentication. Both facts are intentional — don't "fix"
+// either.
+
 type Status = "loading" | "connected" | "failed";
 
 export function Dashboard() {
