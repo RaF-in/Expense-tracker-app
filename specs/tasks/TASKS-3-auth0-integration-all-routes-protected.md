@@ -771,7 +771,7 @@ second.
 
 ## Task T6: Correct the README for the authenticated flow
 
-> **Status:** not started
+> **Status:** done (doc) — verified 2026-09-13 by grep against the running text: both `curl` steps remain verbatim (`/api/health` → 200 at README:88, `localhost:8080/` at README:106 — not over-corrected, A2); the first-run setup names all three `AUTH0_*` keys, links `docs/auth0-setup-runbook.md` (target exists), and carries the `cp frontend/config.js.template frontend/public/config.js` dev step; a new "Rollout after a configuration change" section documents the order update `k8s/secrets.yaml` → `make build` → `make deploy` → `make restart` and states the crash-loop-loudly-by-design behavior plus the deploy-guard error being expected; the browser verification step now describes the Auth0 redirect → login → Dashboard flow; no real tenant values appear in the README (N3). **Deferred to the developer (needs a running cluster/browser):** following the README steps verbatim on a live deploy and the fresh-clone end-to-end run.
 > **Verification:** checklist
 > **Effort:** s
 > **Priority:** high
