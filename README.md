@@ -17,9 +17,10 @@ via a multi-stage Dockerfile.
 
 ## First-run setup
 
-Kubernetes needs credentials for Postgres and RabbitMQ. The real file that carries them,
-`k8s/secrets.yaml`, is **gitignored on purpose** so credentials never end up in version control.
-Before your first deploy, create it from the committed placeholder template:
+Kubernetes needs credentials for Postgres and RabbitMQ, plus Auth0 tenant values for login. The
+real file that carries them, `k8s/secrets.yaml`, is **gitignored on purpose** so credentials and
+environment-specific values never end up in version control. Before your first deploy, create it
+from the committed placeholder template:
 
 ```
 cp k8s/secrets.yaml.template k8s/secrets.yaml
@@ -28,6 +29,23 @@ cp k8s/secrets.yaml.template k8s/secrets.yaml
 Then edit `k8s/secrets.yaml` and replace the placeholder `changeme` values for `POSTGRES_USER`,
 `POSTGRES_PASSWORD`, `RABBITMQ_DEFAULT_USER`, and `RABBITMQ_DEFAULT_PASS` with values of your
 choosing. Leave `POSTGRES_DB` as `expense_tracker` — it's a database name, not a credential.
+
+The same file also needs three Auth0 keys: `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, and `AUTH0_AUDIENCE`.
+They come from an Auth0 tenant — follow [`docs/auth0-setup-runbook.md`](docs/auth0-setup-runbook.md)
+to create or look up the values (domain and clientId from the SPA application, audience from the
+API identifier). These three are public by design; they live in the Secret so environment-specific
+values stay out of git. **A pre-existing `k8s/secrets.yaml` will not gain these keys by pulling** —
+add them by hand, or `make deploy` refuses to run (see below) and, if bypassed, both pods
+crash-loop naming the missing setting.
+
+For frontend development outside the cluster (`npm run dev`), the same values are needed at
+runtime, delivered the same template-plus-gitignored-file way:
+
+```
+cp frontend/config.js.template frontend/public/config.js
+```
+
+Then fill in the same three `AUTH0_*` values in `frontend/public/config.js`.
 
 The cluster also needs an ingress controller to route browser traffic at `http://localhost` to
 the frontend and core-api Services. This is a one-time, manual install of `ingress-nginx` — it's
@@ -55,9 +73,10 @@ make status    # shows pod/service/PVC status
 ```
 
 `make deploy` is guarded: it refuses to run — with an actionable message and no cluster changes —
-if any application image is missing (run `make build` first) or if `k8s/secrets.yaml` doesn't
-exist yet (see First-run setup above). It's also idempotent: running it again after a successful
-deploy is safe and leaves the same pods running.
+if any application image is missing (run `make build` first), if `k8s/secrets.yaml` doesn't
+exist yet, or if it's missing any required Secret key — including the three `AUTH0_*` keys from
+First-run setup above. It's also idempotent: running it again after a successful deploy is safe
+and leaves the same pods running.
 
 ### Verify via the Ingress
 
@@ -70,8 +89,12 @@ curl http://localhost/api/health
 # {"status":"ok","timestamp":"...","version":"0.1.0"}
 ```
 
-Open `http://localhost` in a browser — the Dashboard page should show "Connected to API ✓", and
-the Expenses/Settings nav links should work without a full page reload.
+Open `http://localhost` in a browser — **the app now requires sign-in**: you are redirected to the
+Auth0 login page first. Sign in (email/password or Google — see the runbook for the test user),
+and you land on the Dashboard, which should show "Connected to API ✓"; the Expenses/Settings nav
+links should work without a full page reload, and the top-right shows your initials avatar with a
+Log out button. Every page redirects to Auth0 until you've signed in — that's the route
+protection working, not a broken deploy.
 
 ### Verify each service
 
@@ -123,6 +146,25 @@ the Docker Desktop daemon, so the unqualified name normalizes to `docker.io/expe
 and resolves against that shared store without ever hitting the network. **Do not "fix" this by
 adding a registry prefix** — that would break the local-only guarantee and cause Kubernetes to
 try to pull from a registry that doesn't have these images.
+
+## Rollout after a configuration change
+
+Landing the Auth0 integration is a **breaking change for every existing checkout**: the order
+that works is
+
+1. update `k8s/secrets.yaml` (add `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, `AUTH0_AUDIENCE` — see
+   First-run setup above),
+2. `make build`,
+3. `make deploy`,
+4. `make restart`.
+
+Skipping step 1 crash-loops both the core-api and frontend pods **loudly and by design** —
+each exits at startup naming the missing setting rather than serving a broken app (`make deploy`'s
+key guard usually catches it even earlier, with a message naming the missing key; the crash-loop
+is the backstop, not a bug). For a later change to an existing value (e.g. rotating an Auth0
+setting), steps 3–4 alone are enough: a Secret change needs a pod restart, never an image
+rebuild, because the frontend renders its `config.js` from the pod environment at container
+start.
 
 ## Refreshing a rebuilt image
 

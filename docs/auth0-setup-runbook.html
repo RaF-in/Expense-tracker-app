@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Auth0 Setup Runbook</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+  /* ---------- tokens ---------- */
+  :root {
+    --paper: #F7F8FA;
+    --raised: #FFFFFF;
+    --ink: #1B1E24;
+    --muted: #585D67;
+    --line: #E3E5EA;
+    --line-strong: #C7CBD3;
+    --chip: #ECEEF2;
+    --accent: #C1440E;
+    --accent-ink: #A83B07;
+    --accent-soft: #F8E7DB;
+    --accent-line: #E5B9A4;
+    --ok: #177057;
+    --ok-soft: #E2F1EB;
+    --warn-bg: #FBF3DC;
+    --warn-ink: #7A5200;
+    --warn-line: #DFC879;
+    --crit-bg: #FBECEA;
+    --crit-ink: #A3211A;
+    --crit-line: #E5ACA4;
+    --code-bg: #23262D;
+    --code-ink: #E8E7E2;
+    --code-line: #33373F;
+    --code-dim: #989EA9;
+    --font-sans: "Archivo", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #14161B;
+      --raised: #191C22;
+      --ink: #E8E9EC;
+      --muted: #9AA0AB;
+      --line: #272B33;
+      --line-strong: #3B404B;
+      --chip: #1E2128;
+      --accent: #EE7E45;
+      --accent-ink: #F08E5C;
+      --accent-soft: #33221A;
+      --accent-line: #5C3A28;
+      --ok: #54B896;
+      --ok-soft: #1A2E28;
+      --warn-bg: #2C2414;
+      --warn-ink: #E2BC70;
+      --warn-line: #584722;
+      --crit-bg: #331A17;
+      --crit-ink: #F0A49B;
+      --crit-line: #69322A;
+      --code-bg: #1B1E24;
+      --code-ink: #E8E7E2;
+      --code-line: #2E323A;
+      --code-dim: #8B919C;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #14161B;
+    --raised: #191C22;
+    --ink: #E8E9EC;
+    --muted: #9AA0AB;
+    --line: #272B33;
+    --line-strong: #3B404B;
+    --chip: #1E2128;
+    --accent: #EE7E45;
+    --accent-ink: #F08E5C;
+    --accent-soft: #33221A;
+    --accent-line: #5C3A28;
+    --ok: #54B896;
+    --ok-soft: #1A2E28;
+    --warn-bg: #2C2414;
+    --warn-ink: #E2BC70;
+    --warn-line: #584722;
+    --crit-bg: #331A17;
+    --crit-ink: #F0A49B;
+    --crit-line: #69322A;
+    --code-bg: #1B1E24;
+    --code-ink: #E8E7E2;
+    --code-line: #2E323A;
+    --code-dim: #8B919C;
+  }
+
+  /* ---------- base ---------- */
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+    padding-inline: clamp(16px, 4vw, 40px);
+  }
+  * { box-sizing: border-box; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  a { color: var(--accent-ink); text-underline-offset: 2px; }
+  h1, h2, h3 { text-wrap: balance; }
+  code, pre, kbd { font-family: var(--font-mono); }
+
+  p code, li code, td code, dd code, .callout code, .lede code, .record-head code, .kicker code {
+    font-size: 0.86em;
+    background: var(--chip);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 0.08em 0.34em;
+    word-break: break-word;
+  }
+
+  /* ---------- header ---------- */
+  .doc-head {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding-block: 3.2rem 2.4rem;
+  }
+  .kicker {
+    font-size: 0.86rem;
+    color: var(--muted);
+    margin: 0 0 0.9rem;
+  }
+  .doc-head h1 {
+    font-size: clamp(2.1rem, 4.5vw, 2.85rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.08;
+    margin: 0 0 0.9rem;
+    max-width: 20ch;
+  }
+  .lede {
+    font-size: 1.08rem;
+    color: var(--muted);
+    max-width: 56ch;
+    margin: 0 0 1.6rem;
+  }
+  .meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--raised);
+    margin: 0 0 1rem;
+  }
+  .meta > div { padding: 0.7rem 1rem; border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+  .meta > div:nth-child(-n+2) { border-top: none; }
+  .meta > div:nth-child(odd) { border-left: none; }
+  .meta dt { font-size: 0.78rem; color: var(--muted); margin: 0 0 0.1rem; }
+  .meta dd { margin: 0; font-size: 0.93rem; }
+  .head-note {
+    font-size: 0.92rem;
+    color: var(--muted);
+    max-width: 72ch;
+    margin: 0 0 1.4rem;
+  }
+  .leave {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.86rem;
+    color: var(--muted);
+  }
+  .leave .chip {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--accent-ink);
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
+    border-radius: 999px;
+    padding: 0.22rem 0.7rem;
+  }
+
+  /* ---------- frame: rail + main ---------- */
+  .frame {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding-block: 0 4rem;
+    display: grid;
+    grid-template-columns: 212px minmax(0, 1fr);
+    gap: clamp(1.75rem, 4vw, 3.5rem);
+    border-top: 1px solid var(--line);
+  }
+  .rail {
+    position: sticky;
+    top: 1.25rem;
+    align-self: start;
+    max-height: calc(100vh - 2.5rem);
+    overflow-y: auto;
+    padding-block: 2rem 1rem;
+    font-size: 0.88rem;
+    scrollbar-width: thin;
+  }
+  .rail-title {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin: 0 0 0.5rem 0.6rem;
+  }
+  .rail a {
+    display: flex;
+    align-items: baseline;
+    gap: 0.55rem;
+    padding: 0.4rem 0.6rem;
+    border-radius: 8px;
+    border-left: 2px solid transparent;
+    color: var(--muted);
+    text-decoration: none;
+  }
+  .rail a:hover { color: var(--ink); background: var(--chip); }
+  .rail a.active { color: var(--ink); background: var(--chip); border-left-color: var(--accent); }
+  .rail a .n {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--accent);
+    min-width: 1rem;
+    text-align: right;
+  }
+  .rail a .count {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+
+  /* ---------- sections ---------- */
+  main { padding-top: 2rem; min-width: 0; }
+  main section { scroll-margin-top: 1.5rem; }
+  main section + section { margin-top: 4.25rem; }
+  main section > * + * { margin-block-start: 1.1rem; }
+  main h3 { margin-block-start: 2.3rem; font-size: 1.02rem; font-weight: 600; }
+  main h3 .sub-no {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 0.85em;
+    color: var(--accent-ink);
+    margin-right: 0.35rem;
+  }
+  .step-title {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    font-size: 1.42rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+    margin: 0 0 0.4rem !important;
+  }
+  .step-no {
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--accent-ink);
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
+    border-radius: 999px;
+    padding: 0.18rem 0.62rem;
+    white-space: nowrap;
+  }
+  main p, main ul.plain { max-width: 68ch; }
+  main ul.plain { padding-left: 1.2rem; margin-block-start: 0.6rem; }
+  main ul.plain li + li { margin-top: 0.45rem; }
+  .step-intro { color: var(--muted); font-size: 0.98rem; }
+
+  /* ---------- console click-trail (signature object) ---------- */
+  .trail {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.38rem;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    margin-block-start: 1.25rem;
+  }
+  .trail > span, .trail > a {
+    padding: 0.28rem 0.62rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    background: var(--raised);
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  .trail > a { text-decoration: none; color: var(--accent-ink); border-color: var(--accent-line); }
+  .trail .sep {
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--muted);
+    font-size: 0.85em;
+  }
+  .trail .do {
+    background: var(--accent-soft);
+    border-color: var(--accent-line);
+    color: var(--accent-ink);
+    font-weight: 600;
+  }
+
+  /* ---------- spec (field / value) ---------- */
+  .spec {
+    margin: 0;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--raised);
+    overflow: hidden;
+  }
+  .spec > div {
+    display: grid;
+    grid-template-columns: minmax(130px, 215px) 1fr;
+    gap: 0.75rem;
+    padding: 0.55rem 1rem;
+    border-top: 1px solid var(--line);
+  }
+  .spec > div:first-child { border-top: none; }
+  .spec dt { font-weight: 500; font-size: 0.9rem; }
+  .spec dd { margin: 0; font-family: var(--font-mono); font-size: 0.84rem; line-height: 1.55; overflow-wrap: anywhere; }
+  .spec dd .why { display: block; font-family: var(--font-sans); font-size: 0.82rem; color: var(--muted); margin-top: 0.15rem; }
+
+  /* ---------- record block ---------- */
+  .record {
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    background: var(--raised);
+    overflow: hidden;
+  }
+  .record-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem 0.95rem;
+    border-bottom: 1px dashed var(--line-strong);
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .record-body {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.68rem 0.95rem;
+    font-family: var(--font-mono);
+    font-size: 0.86rem;
+  }
+  .record-body code {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: inherit;
+    overflow-wrap: anywhere;
+  }
+
+  /* ---------- code blocks ---------- */
+  .code { position: relative; }
+  .code pre {
+    margin: 0;
+    background: var(--code-bg);
+    color: var(--code-ink);
+    border: 1px solid var(--code-line);
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+    overflow-x: auto;
+    font-size: 0.84rem;
+    line-height: 1.6;
+  }
+  .code .str { color: var(--accent); opacity: 0.95; }
+  .copy {
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--muted);
+    background: var(--raised);
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    padding: 0.22rem 0.55rem;
+    cursor: pointer;
+    flex: none;
+  }
+  .copy:hover { color: var(--ink); border-color: var(--accent-line); }
+  .copy.did { color: var(--ok); border-color: var(--ok); }
+  .code .copy { position: absolute; top: 0.5rem; right: 0.5rem; }
+
+  /* ---------- callouts ---------- */
+  .callout {
+    border-left: 3px solid var(--c-line, var(--line-strong));
+    background: var(--c-bg, var(--chip));
+    border-radius: 0 10px 10px 0;
+    padding: 0.8rem 1.05rem;
+  }
+  .callout p { max-width: 64ch !important; }
+  .callout .co-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--c-ink, var(--muted));
+    margin: 0 0 0.2rem;
+  }
+  .callout p:last-child { margin-block-end: 0; }
+  .callout.caution { --c-bg: var(--warn-bg); --c-ink: var(--warn-ink); --c-line: var(--warn-line); }
+  .callout.critical { --c-bg: var(--crit-bg); --c-ink: var(--crit-ink); --c-line: var(--crit-line); }
+  .callout.major {
+    border: 1px solid var(--warn-line);
+    border-left-width: 3px;
+    border-radius: 10px;
+  }
+
+  /* ---------- manifest (five things) ---------- */
+  .manifest {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--raised);
+    overflow: hidden;
+  }
+  .manifest li {
+    display: grid;
+    grid-template-columns: 1.9rem minmax(0, 1fr) auto;
+    gap: 0.9rem;
+    align-items: baseline;
+    padding: 0.72rem 1rem;
+    border-top: 1px solid var(--line);
+  }
+  .manifest li:first-child { border-top: none; }
+  .manifest .mn { font-family: var(--font-mono); font-size: 0.8rem; font-weight: 600; color: var(--accent); }
+  .manifest .thing strong { font-weight: 600; }
+  .manifest .thing span { color: var(--muted); }
+  .manifest .produces { font-family: var(--font-mono); font-size: 0.78rem; color: var(--accent-ink); white-space: nowrap; }
+  .manifest .produces.plain { font-family: var(--font-sans); color: var(--muted); white-space: normal; max-width: 18ch; text-align: right; font-size: 0.8rem; }
+
+  /* ---------- ticks (checkbox config items) ---------- */
+  .ticks { list-style: none; margin: 0.6rem 0 0; padding: 0; max-width: 68ch; }
+  .ticks li {
+    display: flex;
+    gap: 0.6rem;
+    align-items: baseline;
+    padding: 0.4rem 0;
+    border-top: 1px dashed var(--line);
+  }
+  .ticks li:first-child { border-top: none; }
+  .ticks .tick {
+    color: var(--ok);
+    font-weight: 700;
+    font-size: 0.9rem;
+    flex: none;
+  }
+  .ticks li div, .ticks li span.txt { min-width: 0; }
+
+  /* ---------- field notes (callback/logout/origins) ---------- */
+  .fieldnotes { border-top: 1px solid var(--line); max-width: 68ch; }
+  .fieldnotes .fn {
+    display: grid;
+    grid-template-columns: 128px minmax(0, 1fr);
+    gap: 0.9rem;
+    padding: 0.65rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .fieldnotes .fn-k { font-family: var(--font-mono); font-size: 0.8rem; font-weight: 600; color: var(--ink); padding-top: 0.15rem; }
+  .fieldnotes .fn p { margin: 0; font-size: 0.92rem; max-width: 58ch; }
+  .fieldnotes .fn .quiet { color: var(--muted); }
+
+  /* ---------- verification checklist ---------- */
+  .check-progress {
+    font-size: 0.86rem;
+    color: var(--muted);
+    margin: 0 0 0.4rem;
+  }
+  .check-progress b { font-family: var(--font-mono); color: var(--ok); font-weight: 600; }
+  .checklist {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--raised);
+    overflow: hidden;
+  }
+  .checklist li { border-top: 1px solid var(--line); }
+  .checklist li:first-child { border-top: none; }
+  .checklist label {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    padding: 0.68rem 1rem;
+    cursor: pointer;
+  }
+  .checklist label:hover { background: var(--chip); }
+  .checklist input {
+    width: 1.1rem;
+    height: 1.1rem;
+    margin: 0.22rem 0 0;
+    flex: none;
+    accent-color: var(--ok);
+    cursor: pointer;
+  }
+  .checklist label span { font-size: 0.93rem; max-width: 66ch; }
+  .checklist li.done label span { color: var(--muted); }
+  .checklist .rref { color: var(--muted); }
+
+  /* ---------- troubleshooting table ---------- */
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--raised);
+  }
+  table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 0.9rem; }
+  th {
+    text-align: left;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--muted);
+    padding: 0.6rem 0.9rem;
+    background: var(--chip);
+    border-bottom: 1px solid var(--line);
+  }
+  td {
+    padding: 0.6rem 0.9rem;
+    border-top: 1px solid var(--line);
+    vertical-align: top;
+  }
+  tr:first-child td { border-top: none; }
+  td.sym { width: 32%; font-weight: 500; }
+  td.fix a { white-space: nowrap; }
+
+  /* ---------- out of scope ---------- */
+  .deferred { max-width: 68ch; }
+  .deferred li { display: flex; gap: 0.6rem; align-items: baseline; }
+  .deferred .dash { color: var(--accent); flex: none; }
+
+  /* ---------- footer ---------- */
+  .foot {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding-block: 1.6rem 3rem;
+    border-top: 1px solid var(--line);
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+  .foot p { margin: 0; }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 940px) {
+    .frame { display: block; }
+    .rail {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      max-height: none;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 0.6rem 0;
+      background: var(--paper);
+      border-bottom: 1px solid var(--line);
+    }
+    .rail-title { display: none; }
+    .rail a {
+      flex: none;
+      border: 1px solid var(--line);
+      border-left: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0.25rem 0.7rem;
+    }
+    .rail a.active { border-color: var(--accent-line); }
+    .rail a .n { min-width: 0; }
+    main { padding-top: 1.5rem; }
+    main section { scroll-margin-top: 3.8rem; }
+    main section + section { margin-top: 3.2rem; }
+    .meta { grid-template-columns: 1fr; }
+    .meta > div { border-left: none !important; }
+    .meta > div:nth-child(-n+2) { border-top: 1px solid var(--line); }
+    .meta > div:first-child { border-top: none; }
+    .spec > div { grid-template-columns: 1fr; gap: 0.15rem; }
+    .manifest li { grid-template-columns: 1.4rem minmax(0, 1fr); }
+    .manifest .produces { grid-column: 2; text-align: left; }
+    .manifest .produces.plain { max-width: none; text-align: left; }
+    .fieldnotes .fn { grid-template-columns: 1fr; gap: 0.2rem; }
+    .record-body { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+  html { scroll-behavior: smooth; }
+</style>
+</head>
+<body>
+
+<header class="doc-head">
+  <p class="kicker">Expense Tracker · Issue #3 · Task 02 of 05</p>
+  <h1>Auth0 setup runbook</h1>
+  <p class="lede">From an empty Auth0 account to a working <code>domain</code>, <code>clientId</code>, and <code>audience</code> — without having to ask the author a question. Local development only.</p>
+  <dl class="meta">
+    <div><dt>Satisfies</dt><dd>R17 / AC-1</dd></div>
+    <div><dt>Time</dt><dd>~30 minutes, plus ~5 for the GitHub OAuth app</dd></div>
+    <div><dt>Origins in scope</dt><dd><code>http://localhost</code> (K8s ingress) and <code>http://localhost:5173</code> (Vite dev server)</dd></div>
+    <div><dt>Automation</dt><dd>None — deliberately (REQ decision 4)</dd></div>
+  </dl>
+  <p class="head-note">Everything here is manual console work. It is deliberately not automated: it happens once per tenant, and the Auth0 Management API / Terraform route costs more to build and maintain than it saves for a single tenant.</p>
+  <p class="leave">You leave with three values:
+    <span class="chip">AUTH0_DOMAIN</span>
+    <span class="chip">AUTH0_CLIENT_ID</span>
+    <span class="chip">AUTH0_AUDIENCE</span>
+  </p>
+</header>
+
+<div class="frame">
+  <nav class="rail" aria-label="Runbook sections">
+    <p class="rail-title">Steps</p>
+    <a href="#overview">Overview</a>
+    <a href="#step-0"><span class="n">0</span>Tenant</a>
+    <a href="#step-1"><span class="n">1</span>API (audience)</a>
+    <a href="#step-2"><span class="n">2</span>SPA application</a>
+    <a href="#step-3"><span class="n">3</span>Connections</a>
+    <a href="#step-4"><span class="n">4</span>Test user</a>
+    <a href="#step-5"><span class="n">5</span>Post-login Action</a>
+    <a href="#step-6"><span class="n">6</span>Cluster values</a>
+    <a href="#step-7"><span class="n">7</span>Verify renewal</a>
+    <a href="#checklist">Verification<span class="count" id="railCount">0/12</span></a>
+    <a href="#troubleshooting">Troubleshooting</a>
+    <a href="#out-of-scope">Out of scope</a>
+  </nav>
+
+  <main>
+
+    <section id="overview">
+      <h2 class="step-title">What you are building</h2>
+      <p class="step-intro">Five things in the Auth0 console, in this order. Order matters — the Action in step 5 can’t be tested until the Application in step 2 exists.</p>
+      <ol class="manifest">
+        <li><span class="mn">1</span><div class="thing"><strong>API</strong> <span>(a resource server)</span></div><span class="produces">AUTH0_AUDIENCE</span></li>
+        <li><span class="mn">2</span><div class="thing"><strong>Application</strong> <span>(SPA type)</span></div><span class="produces">AUTH0_DOMAIN · AUTH0_CLIENT_ID</span></li>
+        <li><span class="mn">3</span><div class="thing"><strong>Connections</strong> <span>database, Google, GitHub</span></div><span class="produces plain">sign-in methods</span></li>
+        <li><span class="mn">4</span><div class="thing"><strong>Test user</strong></div><span class="produces plain">credentials for Task 05</span></li>
+        <li><span class="mn">5</span><div class="thing"><strong>Post-Login Action</strong></div><span class="produces plain"><code>email</code> + <code>name</code> claims in the access token</span></li>
+      </ol>
+      <aside class="callout caution major">
+        <p class="co-title">Read this before you start</p>
+        <p>The single most common way to lose an afternoon on this task is <strong>skipping step 1</strong>. If no API is registered — or the frontend requests a token without an <code>audience</code> — Auth0 returns an <strong>opaque token</strong> (a random string) instead of a JWT. The .NET middleware then fails with a signature error that gives no hint the real cause is a missing audience. Do step 1 first.</p>
+      </aside>
+    </section>
+
+    <section id="step-0">
+      <h2 class="step-title"><span class="step-no">Step 0</span>Create the tenant</h2>
+      <ul class="plain">
+        <li>Sign up at <a href="https://auth0.com">auth0.com</a> (free tier — 7,500 MAU, per ADR-002).</li>
+        <li>Pick a <strong>region</strong>. This becomes part of your domain and <strong>cannot be changed later</strong>.</li>
+        <li>Auth0 creates a tenant with a domain like <code>dev-a1b2c3d4.us.auth0.com</code>.</li>
+      </ul>
+      <div class="record">
+        <div class="record-head"><span>Record it — this is <code>AUTH0_DOMAIN</code></span></div>
+        <div class="record-body">
+          <code>AUTH0_DOMAIN = dev-a1b2c3d4.us.auth0.com</code>
+          <button class="copy" type="button" data-copy="dev-a1b2c3d4.us.auth0.com">Copy</button>
+        </div>
+      </div>
+      <aside class="callout">
+        <p class="co-title">Store the bare hostname</p>
+        <p>No <code>https://</code>, no trailing slash. The frontend SDK wants it bare; the .NET API builds <code>https://{domain}/</code> from it internally. Including the scheme breaks both, in different and confusing ways.</p>
+      </aside>
+    </section>
+
+    <section id="step-1">
+      <h2 class="step-title"><span class="step-no">Step 1</span>Create the API — this is your <em>audience</em></h2>
+      <div class="trail" aria-label="Console path">
+        <span>Applications</span><span class="sep">→</span><span>APIs</span><span class="sep">→</span><span class="do">+ Create API</span>
+      </div>
+      <dl class="spec">
+        <div><dt>Name</dt><dd><code>Expense Tracker API</code></dd></div>
+        <div><dt>Identifier</dt><dd><code>https://api.expense-tracker.local</code></dd></div>
+        <div><dt>JSON Web Token Profile</dt><dd>Auth0 (default)</dd></div>
+        <div><dt>Signing Algorithm</dt><dd><strong>RS256</strong><span class="why">default — do not change to HS256</span></dd></div>
+      </dl>
+      <p><strong>About the Identifier:</strong> it is an opaque string that Auth0 never calls and that never has to resolve to anything. It is a URI purely by convention. Once created it <strong>cannot be changed</strong> — you’d have to delete and recreate the API. Whatever you type here is your <code>audience</code>, verbatim, in both the frontend config and the API config.</p>
+      <p><strong>RS256, not HS256:</strong> RS256 signs with a private key Auth0 holds and publishes the matching public key at <code>/.well-known/jwks.json</code>. That is what lets the Core API validate tokens with <strong>no network call per request</strong> (N4). HS256 uses a shared secret, which would mean putting a signing secret in your API — a genuine credential, unlike everything else in this runbook.</p>
+      <p>Click <strong>Create</strong>.</p>
+
+      <h3 id="step-1a"><span class="sub-no">1a</span>Enable offline access — required, easy to miss</h3>
+      <p>Open the API you just created:</p>
+      <div class="trail" aria-label="Console path">
+        <span>Expense Tracker API</span><span class="sep">→</span><span>Settings</span><span class="sep">→</span><span>Access Settings</span>
+      </div>
+      <ul class="ticks">
+        <li><span class="tick">✓</span><div><strong>Allow Offline Access</strong> → <strong>ON</strong></div></li>
+      </ul>
+      <aside class="callout caution">
+        <p class="co-title">This is not optional</p>
+        <p>With it off, Auth0 silently ignores the <code>offline_access</code> scope and issues <strong>no refresh token</strong>. Everything appears to work until the access token expires, at which point the user is bounced to login mid-session — and <strong>R7 cannot pass</strong>. The failure surfaces hours after the mistake, which is what makes it expensive.</p>
+      </aside>
+      <p>Leave <strong>Token Expiration (Seconds)</strong> at its default <code>86400</code> for now. You will change it temporarily in step 7 to test R7, and change it back.</p>
+      <p>Click <strong>Save</strong>.</p>
+      <div class="record">
+        <div class="record-head"><span>Record it — this is <code>AUTH0_AUDIENCE</code></span></div>
+        <div class="record-body">
+          <code>AUTH0_AUDIENCE = https://api.expense-tracker.local</code>
+          <button class="copy" type="button" data-copy="https://api.expense-tracker.local">Copy</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="step-2">
+      <h2 class="step-title"><span class="step-no">Step 2</span>Create the SPA Application</h2>
+      <div class="trail" aria-label="Console path">
+        <span>Applications</span><span class="sep">→</span><span>Applications</span><span class="sep">→</span><span class="do">+ Create Application</span>
+      </div>
+      <dl class="spec">
+        <div><dt>Name</dt><dd><code>Expense Tracker SPA</code></dd></div>
+        <div><dt>Type</dt><dd><strong>Single Page Web Applications</strong></dd></div>
+      </dl>
+      <p>Pick the type carefully. It determines which grant types and which token-storage options Auth0 offers you. “Regular Web Application” is a confidential client that expects a client secret and will not give you the refresh-token rotation settings in step 2b.</p>
+      <p>Skip the framework quickstart. Go to the <strong>Settings</strong> tab.</p>
+
+      <h3 id="step-2a"><span class="sub-no">2a</span>URLs</h3>
+      <p>Three separate fields. All three take a <strong>comma-separated</strong> list, and all three need <strong>both</strong> origins (R15) — one for the K8s ingress, one for the Vite dev server:</p>
+      <dl class="spec">
+        <div><dt>Allowed Callback URLs</dt><dd><code>http://localhost, http://localhost:5173</code></dd></div>
+        <div><dt>Allowed Logout URLs</dt><dd><code>http://localhost, http://localhost:5173</code></dd></div>
+        <div><dt>Allowed Web Origins</dt><dd><code>http://localhost, http://localhost:5173</code></dd></div>
+      </dl>
+      <p>What each one does — they fail differently, so the distinction is worth knowing:</p>
+      <div class="fieldnotes">
+        <div class="fn"><span class="fn-k">Callback</span><p>Where Auth0 may redirect <em>back to</em> after login. Miss it and login dies on Auth0’s own page with <code>Callback URL mismatch</code>, listing the URL it received. Verbose failure.</p></div>
+        <div class="fn"><span class="fn-k">Logout</span><p>Where Auth0 may redirect after clearing its session. Miss it and logout fails <em>after</em> the session is already gone, stranding the user on an Auth0 error page.</p></div>
+        <div class="fn"><span class="fn-k">Web Origins</span><p>Which origins may make the CORS calls the SDK uses for silent token renewal. Miss it and <strong>login works fine</strong>, then token refresh fails later with an opaque CORS error in the console. <span class="quiet">The quiet one.</span></p></div>
+      </div>
+      <aside class="callout">
+        <p class="co-title">Two string traps</p>
+        <p><code>http://localhost</code> has no port because port 80 is implied — that is the ingress. Do not write <code>http://localhost:80</code>; it will not match. And no trailing slashes: <code>http://localhost/</code> and <code>http://localhost</code> are different strings to Auth0.</p>
+      </aside>
+      <p>Click <strong>Save Changes</strong>.</p>
+
+      <h3 id="step-2b"><span class="sub-no">2b</span>Refresh token rotation</h3>
+      <p>Same Settings page, scroll to <strong>Refresh Token Rotation</strong>:</p>
+      <dl class="spec">
+        <div><dt>Rotation</dt><dd><strong>ON</strong></dd></div>
+        <div><dt>Reuse Interval</dt><dd><code>0</code> seconds (default)</dd></div>
+        <div><dt>Absolute Expiration</dt><dd>ON — <code>2592000</code> seconds (30 days, default)</dd></div>
+        <div><dt>Inactivity Expiration</dt><dd>ON — <code>1296000</code> seconds (15 days, default)</dd></div>
+      </dl>
+      <p><strong>What rotation buys you:</strong> each refresh token is single-use. Using one returns a new one and invalidates the old. If an attacker steals a refresh token and replays it after the legitimate user has already used it, Auth0 detects the reuse and <strong>revokes the entire token family</strong> — logging out the attacker and the user. That detection is the mitigation for storing refresh tokens in <code>localStorage</code>, which is an accepted risk in this architecture (see ARCH-3, C2).</p>
+
+      <h3 id="step-2c"><span class="sub-no">2c</span>Grant types</h3>
+      <p>Same page, bottom of <strong>Advanced Settings</strong> → <strong>Grant Types</strong> tab. Confirm both are ticked:</p>
+      <ul class="ticks">
+        <li><span class="tick">✓</span><div><strong>Authorization Code</strong> — the login flow (with PKCE, which the SDK adds automatically)</div></li>
+        <li><span class="tick">✓</span><div><strong>Refresh Token</strong> — silent renewal (R7)</div></li>
+      </ul>
+      <p><code>Implicit</code> may also be ticked by default. It is a legacy flow the SDK does not use; leaving it on is harmless, unticking it is tidier.</p>
+      <p>Click <strong>Save Changes</strong>.</p>
+
+      <h3 id="step-2d"><span class="sub-no">2d</span>Record the values</h3>
+      <p>From the top of the <strong>Settings</strong> tab:</p>
+      <div class="record">
+        <div class="record-head"><span>Two values — the domain is the same one from step 0</span></div>
+        <div class="record-body">
+          <code>AUTH0_DOMAIN&nbsp;&nbsp;&nbsp;= dev-a1b2c3d4.us.auth0.com</code>
+          <button class="copy" type="button" data-copy="dev-a1b2c3d4.us.auth0.com">Copy</button>
+        </div>
+        <div class="record-body" style="border-top:1px dashed var(--line-strong);">
+          <code>AUTH0_CLIENT_ID = AbCdEf123456…</code>
+          <button class="copy" type="button" data-copy="AbCdEf123456...">Copy</button>
+        </div>
+      </div>
+      <aside class="callout">
+        <p class="co-title">Ignore the Client Secret entirely</p>
+        <p>A SPA is a public client — its code ships to the browser, so it cannot keep a secret. Security comes from the callback-URL allowlist and PKCE. If you ever find yourself pasting the client secret into frontend config, something has gone wrong.</p>
+      </aside>
+    </section>
+
+    <section id="step-3">
+      <h2 class="step-title"><span class="step-no">Step 3</span>Enable connections</h2>
+      <p class="step-intro">Three sign-in methods. Each must be enabled <strong>and</strong> associated with the <code>Expense Tracker SPA</code> application — a connection that exists but isn’t linked to the app won’t appear on the login page.</p>
+
+      <h3 id="step-3a"><span class="sub-no">3a</span>Database (email + password)</h3>
+      <div class="trail" aria-label="Console path">
+        <span>Authentication</span><span class="sep">→</span><span>Database</span>
+      </div>
+      <p><code>Username-Password-Authentication</code> exists by default. Open it → <strong>Applications</strong> tab → toggle <strong>Expense Tracker SPA → ON</strong>.</p>
+      <p>No email-verification gating is configured (REQ decision 11): a user who signs up and never verifies their address still reaches <code>/dashboard</code> (R16). This is the default behavior — you do not need to change anything to get it. Do <strong>not</strong> enable any “require verified email” rule.</p>
+
+      <h3 id="step-3b"><span class="sub-no">3b</span>Google</h3>
+      <div class="trail" aria-label="Console path">
+        <span>Authentication</span><span class="sep">→</span><span>Social</span><span class="sep">→</span><span class="do">+ Create Connection</span><span class="sep">→</span><span>Google</span>
+      </div>
+      <p>Leave <strong>Client ID</strong> and <strong>Client Secret</strong> blank to use <strong>Auth0 development keys</strong>. Then <strong>Applications</strong> tab → toggle <strong>Expense Tracker SPA → ON</strong>.</p>
+      <p>You will see a banner warning that dev keys are in use. That is expected and correct for this task — it is localhost-only (REQ open question 2). Dev keys are rate-limited and show Auth0’s name rather than yours on the consent screen.</p>
+      <aside class="callout">
+        <p class="co-title">Before any real deployment</p>
+        <p>Replace these with project-owned OAuth credentials from the Google Cloud Console. This is a known prerequisite, not a surprise. Deferred here deliberately.</p>
+      </aside>
+
+      <h3 id="step-3c"><span class="sub-no">3c</span>GitHub</h3>
+      <p>GitHub does <strong>not</strong> offer Auth0 development keys, so this one needs a real OAuth App. Two parts.</p>
+      <p><strong>Part 1 — create the OAuth App on GitHub:</strong></p>
+      <div class="trail" aria-label="Console path">
+        <a href="https://github.com/settings/developers">github.com/settings/developers</a><span class="sep">→</span><span>OAuth Apps</span><span class="sep">→</span><span class="do">New OAuth App</span>
+      </div>
+      <dl class="spec">
+        <div><dt>Application name</dt><dd><code>Expense Tracker (local)</code></dd></div>
+        <div><dt>Homepage URL</dt><dd><code>http://localhost</code></dd></div>
+        <div><dt>Authorization callback URL</dt><dd><code>https://YOUR_AUTH0_DOMAIN/login/callback</code><span class="why">substitute your real domain, e.g. <code>https://dev-a1b2c3d4.us.auth0.com/login/callback</code></span></dd></div>
+      </dl>
+      <p>The callback URL points at <strong>Auth0</strong>, not at your app. This is the step people get wrong: GitHub redirects to Auth0, and Auth0 then redirects to you. Note it is <code>https://</code> here, unlike your localhost URLs.</p>
+      <p>Click <strong>Register application</strong>, then <strong>Generate a new client secret</strong>. Copy both the Client ID and the secret — <strong>the secret is shown once</strong>.</p>
+      <p><strong>Part 2 — wire it into Auth0:</strong></p>
+      <div class="trail" aria-label="Console path">
+        <span>Authentication</span><span class="sep">→</span><span>Social</span><span class="sep">→</span><span class="do">+ Create Connection</span><span class="sep">→</span><span>GitHub</span>
+      </div>
+      <dl class="spec">
+        <div><dt>Client ID</dt><dd>from the GitHub OAuth App</dd></div>
+        <div><dt>Client Secret</dt><dd>from the GitHub OAuth App</dd></div>
+        <div><dt>Attributes</dt><dd><strong>✓ Email address</strong> (plus the defaults)</dd></div>
+      </dl>
+      <p>Tick <strong>Email address</strong> explicitly. Without it, GitHub users arrive with no <code>email</code> claim, and the avatar-initials fallback chain (R5) has nothing to fall back to before the generic icon.</p>
+      <p>Then <strong>Applications</strong> tab → toggle <strong>Expense Tracker SPA → ON</strong>.</p>
+      <aside class="callout">
+        <p class="co-title">Expect duplicate accounts</p>
+        <p>Signing in with Google, GitHub, and email/password using the same address produces <strong>three separate users with three different <code>sub</code> values</strong>. This is correct behavior for this task, not a defect. Account linking is deferred to issue #4, where it lands before the first <code>Transaction.UserId</code> is ever persisted — a config change rather than a data migration (REQ decision 12).</p>
+      </aside>
+    </section>
+
+    <section id="step-4">
+      <h2 class="step-title"><span class="step-no">Step 4</span>Create a test user</h2>
+      <div class="trail" aria-label="Console path">
+        <span>User Management</span><span class="sep">→</span><span>Users</span><span class="sep">→</span><span class="do">+ Create User</span>
+      </div>
+      <dl class="spec">
+        <div><dt>Email</dt><dd><code>qa@expense-tracker.local</code></dd></div>
+        <div><dt>Password</dt><dd>generate a strong one</dd></div>
+        <div><dt>Connection</dt><dd><code>Username-Password-Authentication</code></dd></div>
+      </dl>
+      <p>Store the password in your password manager. This user is not needed for Task 02 itself — it exists so Task 05’s Playwright suite (#6) is unblocked without another console trip.</p>
+    </section>
+
+    <section id="step-5">
+      <h2 class="step-title"><span class="step-no">Step 5</span>Post-Login Action: profile claims in the access token</h2>
+      <p class="step-intro"><strong>This step is what makes <code>/api/me</code> return <code>email</code> and <code>name</code> (R12 / AC-16).</strong></p>
+      <p>Auth0 access tokens contain only <code>iss</code>, <code>sub</code>, <code>aud</code>, <code>exp</code>, <code>azp</code>, and <code>scope</code>. The <code>profile</code> and <code>email</code> scopes populate the <strong>ID token</strong> and the <code>/userinfo</code> endpoint — <strong>not</strong> the access token. The Core API only ever sees the access token (correctly — the ID token must never be sent to it), so without this Action <code>/api/me</code> returns <code>sub</code> plus two nulls.</p>
+      <p>That failure mode returns <strong>200</strong>, which is why it looks like it works.</p>
+      <div class="trail" aria-label="Console path">
+        <span>Actions</span><span class="sep">→</span><span>Library</span><span class="sep">→</span><span class="do">+ Build Custom</span>
+      </div>
+      <dl class="spec">
+        <div><dt>Name</dt><dd><code>Add profile claims to access token</code></dd></div>
+        <div><dt>Trigger</dt><dd><strong>Login / Post Login</strong></dd></div>
+        <div><dt>Runtime</dt><dd>Node 22 (recommended default)</dd></div>
+      </dl>
+      <p>Replace the editor contents with:</p>
+      <div class="code">
+        <pre><code>exports.onExecutePostLogin = async (event, api) =&gt; {
+  const namespace = <span class="str">'https://expense-tracker.local'</span>;
+
+  api.accessToken.setCustomClaim(`${namespace}/email`, event.user.email ?? null);
+  api.accessToken.setCustomClaim(`${namespace}/name`, event.user.name ?? null);
+};</code></pre>
+        <button class="copy" type="button" data-copy="exports.onExecutePostLogin = async (event, api) => {
+  const namespace = 'https://expense-tracker.local';
+
+  api.accessToken.setCustomClaim(`${namespace}/email`, event.user.email ?? null);
+  api.accessToken.setCustomClaim(`${namespace}/name`, event.user.name ?? null);
+};">Copy</button>
+      </div>
+      <p>Click <strong>Deploy</strong>.</p>
+      <p>Then attach it:</p>
+      <div class="trail" aria-label="Console path">
+        <span>Actions</span><span class="sep">→</span><span>Triggers</span><span class="sep">→</span><span>post-login</span>
+      </div>
+      <p>Drag <code>Add profile claims to access token</code> from the right-hand panel onto the flow, between <strong>Start</strong> and <strong>Complete</strong> → <strong>Apply</strong>.</p>
+      <aside class="callout caution">
+        <p class="co-title">Deploying is not enough</p>
+        <p>An Action that isn’t in the flow never runs. This is the second place this step quietly fails.</p>
+      </aside>
+
+      <h3><span class="sub-no">§</span>Why the namespace</h3>
+      <p>Auth0 rejects custom claims on non-namespaced names to avoid collisions with OIDC standard claims. The namespace must look like a URL and <strong>must not</strong> be an <code>auth0.com</code> domain. It never has to resolve. The resulting claim keys are:</p>
+      <div class="code">
+        <pre><code>https://expense-tracker.local/email
+https://expense-tracker.local/name</code></pre>
+        <button class="copy" type="button" data-copy="https://expense-tracker.local/email">Copy</button>
+      </div>
+      <aside class="callout caution">
+        <p class="co-title">These strings must match the Core API exactly</p>
+        <p>They are read verbatim in <code>services/core-api/src/Program.cs</code>. A typo in either place yields nulls, not an error.</p>
+      </aside>
+      <p><code>?? null</code> matters: GitHub users frequently have no <code>name</code>, and machine-to-machine tokens (Task 04, #5) have neither — no human logged in, so this Action never ran. The API reads these claims null-safely and returns nulls rather than throwing, which is what makes N5 hold.</p>
+    </section>
+
+    <section id="step-6">
+      <h2 class="step-title"><span class="step-no">Step 6</span>Put the values into the cluster</h2>
+      <p>You now have three values:</p>
+      <div class="code">
+        <pre><code>AUTH0_DOMAIN    = dev-a1b2c3d4.us.auth0.com
+AUTH0_CLIENT_ID = AbCdEf123456...
+AUTH0_AUDIENCE  = https://api.expense-tracker.local</code></pre>
+        <button class="copy" type="button" data-copy="AUTH0_DOMAIN    = dev-a1b2c3d4.us.auth0.com
+AUTH0_CLIENT_ID = AbCdEf123456...
+AUTH0_AUDIENCE  = https://api.expense-tracker.local">Copy</button>
+      </div>
+
+      <h3 id="step-6a"><span class="sub-no">6a</span>Kubernetes (<code>http://localhost</code>)</h3>
+      <p>If you have not created your local secrets file yet:</p>
+      <div class="code">
+        <pre><code>cp k8s/secrets.yaml.template k8s/secrets.yaml</code></pre>
+        <button class="copy" type="button" data-copy="cp k8s/secrets.yaml.template k8s/secrets.yaml">Copy</button>
+      </div>
+      <p>Edit <code>k8s/secrets.yaml</code> and fill in the three <code>AUTH0_*</code> keys alongside the existing Postgres and RabbitMQ values. <code>k8s/secrets.yaml</code> is <strong>gitignored</strong>; <code>k8s/secrets.yaml.template</code> carries placeholders only, and no real tenant value is ever committed (N3).</p>
+
+      <h3 id="step-6b"><span class="sub-no">6b</span>Vite dev server (<code>http://localhost:5173</code>)</h3>
+      <div class="code">
+        <pre><code>cp frontend/config.js.template frontend/public/config.js</code></pre>
+        <button class="copy" type="button" data-copy="cp frontend/config.js.template frontend/public/config.js">Copy</button>
+      </div>
+      <p>Edit it with the same three values. <code>frontend/public/config.js</code> is gitignored, exactly mirroring the <code>k8s/secrets.yaml</code> pattern.</p>
+
+      <h3 id="step-6c"><span class="sub-no">6c</span>Deploy</h3>
+      <div class="code">
+        <pre><code>make build
+make deploy
+make restart</code></pre>
+        <button class="copy" type="button" data-copy="make build
+make deploy
+make restart">Copy</button>
+      </div>
+      <aside class="callout">
+        <p class="co-title">Are these secret?</p>
+        <p>Not cryptographically — a SPA <code>clientId</code>, <code>domain</code>, and <code>audience</code> are visible in any browser’s network tab and are public by design. They live in a K8s Secret to keep environment-specific values out of git (N3), not because they are credentials. The values that genuinely <em>are</em> credentials — <code>POSTGRES_PASSWORD</code>, <code>RABBITMQ_DEFAULT_PASS</code> — live in the same Secret but are <strong>never</strong> injected into the frontend pod. See ARCH-3, C8.</p>
+      </aside>
+    </section>
+
+    <section id="step-7">
+      <h2 class="step-title"><span class="step-no">Step 7</span>Temporarily shorten the token lifetime to verify R7</h2>
+      <p class="step-intro">R7 / AC-11 requires proving that silent token renewal genuinely works. The refresh code path never executes during a normal session, so a configuration-only check passes while renewal is actually broken — a missing <code>offline_access</code>, rotation disabled, an interceptor that never refreshes. The only honest test is to make a token expire while you watch.</p>
+      <p><strong>To test:</strong></p>
+      <div class="trail" aria-label="Console path">
+        <span>Applications</span><span class="sep">→</span><span>APIs</span><span class="sep">→</span><span>Expense Tracker API</span><span class="sep">→</span><span>Settings</span>
+      </div>
+      <ol class="plain">
+        <li><strong>Token Expiration (Seconds)</strong>: <code>86400</code> → <strong><code>60</code></strong></li>
+        <li><strong>Save</strong></li>
+        <li>Log in to the app. Open devtools → Network. Wait ~70 seconds.</li>
+        <li>Trigger an API call (navigate to a page that fetches).</li>
+        <li><strong>Expect:</strong> a request to <code>https://YOUR_DOMAIN/oauth/token</code> immediately followed by the API call succeeding. No visible interruption, no redirect to login.</li>
+      </ol>
+      <aside class="callout critical">
+        <p class="co-title">Then restore it</p>
+        <p><strong>Token Expiration (Seconds)</strong>: back to <strong><code>86400</code></strong> → <strong>Save</strong>. Do not skip the restore. A 60-second lifetime left in place generates constant refresh traffic and makes every later debugging session strange. This step is called out explicitly in R17 because it is exactly the kind of temporary change that gets forgotten.</p>
+      </aside>
+    </section>
+
+    <section id="checklist">
+      <h2 class="step-title">Verification checklist</h2>
+      <p class="step-intro">Work through these before declaring the tenant done. Your progress is saved in this browser.</p>
+      <p class="check-progress"><b id="ckCount">0</b> of 12 verified</p>
+      <ul class="checklist">
+        <li><label><input type="checkbox"><span><code>curl http://localhost/api/health</code> → <strong>200</strong>, no token needed <span class="rref">(R10)</span></span></label></li>
+        <li><label><input type="checkbox"><span><code>curl http://localhost/api/me</code> → <strong>401</strong> <span class="rref">(R11)</span></span></label></li>
+        <li><label><input type="checkbox"><span>Visiting <code>http://localhost/expenses</code> while logged out → Auth0 login, and after signing in you land on <strong><code>/expenses</code></strong>, not <code>/dashboard</code> <span class="rref">(R2)</span></span></label></li>
+        <li><label><input type="checkbox"><span>Login works with <strong>email/password</strong>, <strong>Google</strong>, and <strong>GitHub</strong> <span class="rref">(step 3)</span></span></label></li>
+        <li><label><input type="checkbox"><span>Login works from <strong>both</strong> <code>http://localhost</code> and <code>http://localhost:5173</code> <span class="rref">(R15)</span></span></label></li>
+        <li><label><input type="checkbox"><span>NavBar avatar shows initials; a GitHub account without a <code>name</code> falls back to the email local-part <span class="rref">(R5)</span></span></label></li>
+        <li><label><input type="checkbox"><span>Devtools → Network → an <code>/api/me</code> request carries <code>Authorization: Bearer …</code>, and pasting the token into <a href="https://jwt.io">jwt.io</a> shows an <code>aud</code> equal to your <strong>API identifier</strong> — confirming it is the access token, not the ID token <span class="rref">(R6)</span></span></label></li>
+        <li><label><input type="checkbox"><span>That same decoded token contains <code>https://expense-tracker.local/email</code> <span class="rref">(step 5)</span></span></label></li>
+        <li><label><input type="checkbox"><span><code>/api/me</code> with a valid token → <strong>200</strong> with <code>sub</code>, <code>email</code>, <code>name</code> populated <span class="rref">(R12)</span></span></label></li>
+        <li><label><input type="checkbox"><span>R7 verified per step 7 — <strong>and the token lifetime restored to <code>86400</code></strong></span></label></li>
+        <li><label><input type="checkbox"><span>After logout, visiting <code>/dashboard</code> prompts for login rather than signing you straight back in <span class="rref">(R9)</span></span></label></li>
+        <li><label><input type="checkbox"><span><code>git status</code> shows no <code>k8s/secrets.yaml</code> and no <code>frontend/public/config.js</code> <span class="rref">(N3)</span></span></label></li>
+      </ul>
+    </section>
+
+    <section id="troubleshooting">
+      <h2 class="step-title">Troubleshooting</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th class="sym">Symptom</th><th>Cause</th><th>Fix</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="sym">Token is a short random string, not three dot-separated parts</td><td>No <code>audience</code> in the token request, or no API registered</td><td class="fix"><a href="#step-1">Step 1</a>; confirm the frontend sends <code>audience</code></td></tr>
+            <tr><td class="sym">.NET logs a signature validation error, token looks fine</td><td>Same as above — an opaque token has no signature to validate</td><td class="fix"><a href="#step-1">Step 1</a></td></tr>
+            <tr><td class="sym"><code>Callback URL mismatch</code> on Auth0’s page</td><td>URL not in <strong>Allowed Callback URLs</strong></td><td class="fix"><a href="#step-2a">Step 2a</a> — the error names the exact URL received</td></tr>
+            <tr><td class="sym">Login works, refresh fails with a CORS error</td><td>Origin missing from <strong>Allowed Web Origins</strong></td><td class="fix"><a href="#step-2a">Step 2a</a> — the quiet one</td></tr>
+            <tr><td class="sym">User bounced to login when the token expires</td><td><code>Allow Offline Access</code> off, or <code>offline_access</code> not requested</td><td class="fix"><a href="#step-1a">Step 1a</a></td></tr>
+            <tr><td class="sym"><code>/api/me</code> returns <strong>200</strong> with <code>email: null</code>, <code>name: null</code></td><td>Action not deployed, not attached to the flow, or namespace mismatch</td><td class="fix"><a href="#step-5">Step 5</a> — check the trigger flow, not just the Library</td></tr>
+            <tr><td class="sym"><code>/api/me</code> returns 401 with a token that decodes fine</td><td><code>aud</code> mismatch, or the <strong>ID token</strong> was sent instead of the access token</td><td class="fix">Compare the token’s <code>aud</code> to <code>AUTH0_AUDIENCE</code></td></tr>
+            <tr><td class="sym">Expired token still returns <strong>200</strong></td><td>.NET’s default <code>ClockSkew</code> is <strong>5 minutes</strong></td><td class="fix">Expected unless <code>ClockSkew</code> is lowered — see ARCH-3, Phase E</td></tr>
+            <tr><td class="sym">“Sign in” logs you straight back in with no prompt</td><td>Only local tokens were cleared; Auth0’s session cookie survived</td><td class="fix">Logout must hit Auth0’s <code>/v2/logout</code> (R9)</td></tr>
+            <tr><td class="sym">core-api pod in <code>CrashLoopBackOff</code></td><td>Missing/malformed <code>Auth0__Domain</code> or <code>Auth0__Audience</code></td><td class="fix"><code>make logs svc=core-api</code> — the message names the setting (N1)</td></tr>
+            <tr><td class="sym">Frontend pod exits at startup</td><td>Missing <code>AUTH0_*</code> env var</td><td class="fix"><code>make logs svc=frontend</code> — the entrypoint names the variable</td></tr>
+            <tr><td class="sym">Three accounts for one person</td><td>Expected — <code>sub</code> is connection-specific</td><td class="fix">Deferred to #4 (REQ decision 12)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="out-of-scope">
+      <h2 class="step-title">What this runbook deliberately does not cover</h2>
+      <p class="step-intro">Out of scope for issue #3, each with a reason:</p>
+      <ul class="plain deferred">
+        <li><span class="dash">—</span><span><strong>Production / non-localhost environments</strong> — deployment is Task 05 and beyond.</span></li>
+        <li><span class="dash">—</span><span><strong>Project-owned Google OAuth credentials</strong> — dev keys suffice for localhost; required before any real deployment.</span></li>
+        <li><span class="dash">—</span><span><strong>Account linking across connections</strong> — issue #4, before the first persisted <code>UserId</code>.</span></li>
+        <li><span class="dash">—</span><span><strong>Machine-to-machine (M2M) applications</strong> — issue #5, with the caller that needs them.</span></li>
+        <li><span class="dash">—</span><span><strong>Roles, scopes, permissions</strong> — nothing to authorize until data exists (REQ decision 10).</span></li>
+        <li><span class="dash">—</span><span><strong>Universal Login branding, MFA, password reset customization</strong> — Auth0 defaults suffice.</span></li>
+      </ul>
+    </section>
+
+  </main>
+</div>
+
+<footer class="foot">
+  <p>Source: <code>docs/auth0-setup-runbook.md</code> · Expense Tracker, issue #3, task 02 of 05. Checklist progress is kept in your browser only.</p>
+</footer>
+
+<script>
+(function () {
+  // ----- copy buttons -----
+  function flash(btn, text) {
+    btn.textContent = text;
+    btn.classList.add('did');
+    setTimeout(function () { btn.textContent = 'Copy'; btn.classList.remove('did'); }, 1300);
+  }
+  function legacyCopy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    ta.remove();
+    return ok;
+  }
+  document.querySelectorAll('.copy').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var text = btn.getAttribute('data-copy') || '';
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(
+          function () { flash(btn, 'Copied'); },
+          function () { flash(btn, legacyCopy(text) ? 'Copied' : 'Copy failed'); }
+        );
+      } else {
+        flash(btn, legacyCopy(text) ? 'Copied' : 'Copy failed');
+      }
+    });
+  });
+
+  // ----- scrollspy -----
+  var links = Array.prototype.slice.call(document.querySelectorAll('.rail a[href^="#"]'));
+  function setActive(id) {
+    links.forEach(function (a) {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + id);
+    });
+  }
+  links.forEach(function (a) {
+    a.addEventListener('click', function () { setActive(a.getAttribute('href').slice(1)); });
+  });
+  var sections = Array.prototype.slice.call(document.querySelectorAll('main section[id]'));
+  if ('IntersectionObserver' in window) {
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) { if (en.isIntersecting) setActive(en.target.id); });
+    }, { rootMargin: '-12% 0px -78% 0px', threshold: 0 });
+    sections.forEach(function (s) { obs.observe(s); });
+  }
+
+  // ----- verification checklist (per-viewer) -----
+  var KEY = 'auth0-runbook-checks-v1';
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('.checklist input[type="checkbox"]'));
+  var items = Array.prototype.slice.call(document.querySelectorAll('.checklist li'));
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { saved = {}; }
+  function refresh() {
+    var n = 0;
+    boxes.forEach(function (b, i) {
+      items[i].classList.toggle('done', b.checked);
+      if (b.checked) n++;
+    });
+    var c1 = document.getElementById('ckCount');
+    if (c1) c1.textContent = String(n);
+    var c2 = document.getElementById('railCount');
+    if (c2) c2.textContent = n + '/' + boxes.length;
+  }
+  boxes.forEach(function (b, i) {
+    b.checked = !!saved[i];
+    b.id = 'ck-' + i;
+    b.addEventListener('change', function () {
+      saved[i] = b.checked;
+      try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) { /* private mode */ }
+      refresh();
+    });
+  });
+  refresh();
+})();
+</script>
+</body>
+</html>

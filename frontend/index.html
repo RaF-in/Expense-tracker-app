@@ -4,6 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Expense Tracker</title>
+    <!-- Must load before the module bundle and synchronously: src/config.ts
+         reads window.__APP_CONFIG__ at module load, so no config loading state
+         can sit in front of the auth loading state. Rendered at container
+         start from the pod's AUTH0_* env (or copied from
+         frontend/config.js.template for Vite dev) — never built into the
+         bundle. In <head> so Vite's injected module tag always follows it. -->
+    <script src="/config.js"></script>
   </head>
   <body>
     <div id="root"></div>

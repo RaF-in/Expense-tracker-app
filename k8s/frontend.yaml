@@ -40,6 +40,25 @@ spec:
         - name: frontend
           image: expense-tracker/frontend:local
           imagePullPolicy: IfNotPresent
+          # Explicit per-key secretKeyRef, never envFrom: this pod's entrypoint
+          # writes environment variables into a publicly served file, so it
+          # must never see POSTGRES_PASSWORD or any other Secret key.
+          env:
+            - name: AUTH0_DOMAIN
+              valueFrom:
+                secretKeyRef:
+                  name: expense-tracker-secrets
+                  key: AUTH0_DOMAIN
+            - name: AUTH0_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: expense-tracker-secrets
+                  key: AUTH0_CLIENT_ID
+            - name: AUTH0_AUDIENCE
+              valueFrom:
+                secretKeyRef:
+                  name: expense-tracker-secrets
+                  key: AUTH0_AUDIENCE
           ports:
             - containerPort: 80
           resources:
